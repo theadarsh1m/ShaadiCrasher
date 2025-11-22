@@ -1,5 +1,6 @@
 import React from "react";
 import { Heart, Calendar } from "lucide-react";
+import {LiquidButton} from "../Components/ui/LiquidButton"
 
 export default function Hero() {
   return (
@@ -14,9 +15,9 @@ export default function Hero() {
           cards and discover venues.
         </p>
 
-        <button className="px-8 py-4 bg-rose-600 text-white rounded-full font-bold text-lg shadow-xl shadow-rose-200 hover:bg-rose-700 hover:scale-105 transition-all cursor-pointer flex items-center">
-          Get Started <span className="opacity-70 ml-2"></span>
-        </button>
+        <LiquidButton variant="rose" size="lg">
+          Get Started <span className=""></span>
+        </LiquidButton>
       </div>
 
       {/* Hero Graphic */}
