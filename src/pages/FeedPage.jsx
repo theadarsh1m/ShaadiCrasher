@@ -11,7 +11,6 @@ export default function FeedPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Create a query to get invites sorted by creation time (newest first)
     const q = query(collection(db, "invites"), orderBy("createdAt", "desc"));
 
     // Real-time listener for updates
@@ -36,7 +35,7 @@ export default function FeedPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
         <div>
           <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Free Parties...</h2>
-          <p className="text-gray-500 mt-1">Discover nearby celebrations & join the fun!</p>
+          <p className="text-gray-500 mt-1">Discover nearby Shaadies and Have Food & Fun</p>
         </div>
         <Button asChild className="bg-rose-600 hover:bg-rose-700 shadow-lg shadow-rose-100 hover:shadow-rose-200 transition-all rounded-full px-6">
           <Link to="/create" className="flex items-center gap-2">

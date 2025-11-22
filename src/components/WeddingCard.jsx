@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 
 export default function WeddingCard({ invite }) {
-  const { venue, date, imageUrl, displayName } = invite;
+  const { venue, date, imageUrl } = invite;
 
   const formattedDate = new Date(date).toLocaleDateString("en-US", {
     weekday: "long",
