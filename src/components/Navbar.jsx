@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 
 export default function Navbar({ user }) {
-  const {handleLogin, handleLogout} = useAuth();
+  const { handleLogin, handleLogout } = useAuth();
 
   return (
     <nav className="bg-white px-4 py-3 shadow-sm sticky top-0 z-10">
@@ -30,6 +30,9 @@ export default function Navbar({ user }) {
             ) : (
               <UserCircle size={32} className="text-gray-600" />
             )}
+            <span className="text-sm font-medium text-gray-700 hidden sm:block">
+              {user.displayName ? user.displayName.split(" ")[0] : "Mai hu kaun"}
+            </span>
             <Button
               variant="ghost"
               onClick={handleLogout}

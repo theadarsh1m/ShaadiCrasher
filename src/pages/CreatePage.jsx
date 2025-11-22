@@ -62,7 +62,6 @@ export default function CreatePage() {
         date: formData.get("date"),
         imageUrl: imageUrl,
         userId: auth.currentUser.uid,
-        userPhoto: auth.currentUser.photoURL,
         createdAt: serverTimestamp(),
       });
       navigate("/feed");
@@ -150,7 +149,7 @@ export default function CreatePage() {
 
           <Button
             type="submit"
-            className="w-full bg-rose-600 hover:bg-rose-700 text-lg py-6"
+            className="w-full bg-rose-600 hover:bg-rose-700 text-lg py-6 cursor-pointer"
             disabled={!file || loading}
           >
             {loading ? (
