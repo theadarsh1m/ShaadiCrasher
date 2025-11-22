@@ -4,8 +4,8 @@ import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./firebase";
 import { Navigate } from "react-router-dom";
 
-import Navbar from "./Components/Navbar";
-import Hero from "./Components/Hero";
+import Navbar from "./components/Navbar";
+import Hero from "./components/Hero";
 import FeedPage from "./pages/FeedPage";
 
 export default function App() {

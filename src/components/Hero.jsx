@@ -1,6 +1,6 @@
 import React from "react";
 import { Heart, Calendar } from "lucide-react";
-import {LiquidButton} from "../Components/ui/LiquidButton"
+import {LiquidButton} from "./ui/LiquidButton"
 
 export default function Hero() {
   return (
