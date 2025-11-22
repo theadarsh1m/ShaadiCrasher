@@ -8,7 +8,7 @@ export default function Footer() {
         <div className="flex flex-col items-center md:items-start gap-1">
           <div className="flex items-center gap-2 text-rose-600">
             <Heart className="fill-current" size={18} />
-            <span className="font-bold text-gray-900">WeddingCrasher</span>
+            <span className="font-bold text-gray-900">By Adarsh Sachan</span>
           </div>
           <p className="text-xs text-gray-500">A fun Project</p>
         </div>
