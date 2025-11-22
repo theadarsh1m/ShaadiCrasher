@@ -8,6 +8,7 @@ import FeedPage from "./pages/FeedPage";
 import Footer from "./components/Footer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "./context/AuthContext";
+import CreatePage from "./pages/CreatePage";
 
 export default function App() {
 
@@ -49,6 +50,7 @@ export default function App() {
           path="/feed"
           element={user ? <FeedPage /> : <Navigate to="/" />}
         />
+        <Route path="/create" element={<CreatePage />} />
       </Routes>
       <Footer />
     </Router>
