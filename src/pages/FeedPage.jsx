@@ -1,28 +1,76 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Loader2 } from "lucide-react";
+import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
+import { db } from "../firebase"; 
 import { Button } from "@/components/ui/button";
+import WeddingCard from "../components/WeddingCard";
 
 export default function FeedPage() {
+  const [invites, setInvites] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Create a query to get invites sorted by creation time (newest first)
+    const q = query(collection(db, "invites"), orderBy("createdAt", "desc"));
+
+    // Real-time listener for updates
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const invitesData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setInvites(invitesData);
+      setLoading(false);
+    }, (error) => {
+      console.error("Error fetching invites:", error);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   return (
-    <div className="max-w-5xl mx-auto px-6 py-8 min-h-[60vh]">
-      <div className="flex justify-between items-center mb-8">
-        <h2 className="text-3xl font-bold text-gray-800">Free Parties...</h2>
-        <Button asChild className="bg-rose-600 hover:bg-rose-700">
+    <div className="max-w-6xl mx-auto px-6 py-8 min-h-[80vh]">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Free Parties...</h2>
+          <p className="text-gray-500 mt-1">Discover nearby celebrations & join the fun!</p>
+        </div>
+        <Button asChild className="bg-rose-600 hover:bg-rose-700 shadow-lg shadow-rose-100 hover:shadow-rose-200 transition-all rounded-full px-6">
           <Link to="/create" className="flex items-center gap-2">
-            <PlusCircle size={20} />
+            <PlusCircle size={18} />
             Add Invite
           </Link>
         </Button>
       </div>
       
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {/* will connect to Firestore */}
-        <div className="p-8 text-center bg-gray-50 rounded-xl border border-dashed border-gray-300 col-span-full">
-          <p className="text-gray-500 text-lg mb-2">No weddings found yet!</p>
-          <p className="text-sm text-gray-400">Upload an invite.</p>
+      {/* Content */}
+      {loading ? (
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-rose-600" />
         </div>
-      </div>
+      ) : invites.length > 0 ? (
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          {invites.map((invite) => (
+            <WeddingCard key={invite.id} invite={invite} />
+          ))}
+        </div>
+      ) : (
+        <div className="p-12 text-center bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 col-span-full flex flex-col items-center justify-center min-h-[400px]">
+          <div className="bg-white p-4 rounded-full shadow-sm mb-4">
+            <PlusCircle className="h-8 w-8 text-rose-400" />
+          </div>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">No weddings found yet!</h3>
+          <p className="text-gray-500 max-w-sm mx-auto mb-6">
+            Looks like there are no parties happening nearby. Be the first one to start the celebration!
+          </p>
+          <Button asChild variant="outline" className="border-rose-200 text-rose-600 hover:bg-rose-50">
+            <Link to="/create">Upload an Invite</Link>
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
