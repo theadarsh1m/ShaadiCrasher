@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "./firebase";
 import { Navigate } from "react-router-dom";
 
 import Navbar from "./components/Navbar";
@@ -9,18 +7,11 @@ import Hero from "./components/Hero";
 import FeedPage from "./pages/FeedPage";
 import Footer from "./components/Footer";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "./context/AuthContext";
 
 export default function App() {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
+  const { user, loading } = useAuth(); // getting from authContext
 
   if (loading) {
     return (

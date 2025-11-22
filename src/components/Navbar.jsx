@@ -2,25 +2,10 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Heart, UserCircle, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { signInWithPopup, signOut } from "firebase/auth";
-import { auth, googleProvider } from "../firebase";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Navbar({ user }) {
-  const handleLogin = async () => {
-    try {
-      await signInWithPopup(auth, googleProvider);
-    } catch (error) {
-      console.error("Error signing in:", error);
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error("Error signing out:", error);
-    }
-  };
+  const {handleLogin, handleLogout} = useAuth();
 
   return (
     <nav className="bg-white px-4 py-3 shadow-sm sticky top-0 z-10">
@@ -63,7 +48,7 @@ export default function Navbar({ user }) {
           >
             <UserCircle className="size-[25px]" />
             <span className="relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:origin-bottom-left after:scale-x-0 after:bg-rose-600 after:transition-transform after:duration-300 group-hover:after:scale-x-100">
-              Login
+              SignUp/Login
             </span>
           </Button>
         )}
