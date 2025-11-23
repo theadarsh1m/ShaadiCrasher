@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import toast from "react-hot-toast";
 
 export default function WeddingCard({ invite }) {
   const { venue, date, imageUrl } = invite;
@@ -36,7 +37,7 @@ export default function WeddingCard({ invite }) {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Download failed:", error);
-      alert("Failed to download image. Please try again.");
+      toast.error("Failed to download Card. Please try again.");
     }
   };
 

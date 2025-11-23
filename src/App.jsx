@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Navigate } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
@@ -11,7 +12,6 @@ import { useAuth } from "./context/AuthContext";
 import CreatePage from "./pages/CreatePage";
 
 export default function App() {
-
   const { user, loading } = useAuth(); // getting from authContext
 
   if (loading) {
@@ -43,6 +43,18 @@ export default function App() {
   return (
     <Router>
       <Navbar user={user} />
+      <Toaster
+        position="top-center"
+        reverseOrder={false}
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: "#f43f5e",
+            color: "white",
+            fontWeight: "bold",
+          },
+        }}
+      />
       <Routes>
         {/* if user show feed */}
         <Route path="/" element={user ? <Navigate to="/feed" /> : <Hero />} />

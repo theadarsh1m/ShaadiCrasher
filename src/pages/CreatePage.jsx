@@ -7,6 +7,7 @@ import { db, storage, auth } from "../firebase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import toast from 'react-hot-toast';
 
 export default function CreatePage() {
   const navigate = useNavigate();
@@ -49,12 +50,30 @@ export default function CreatePage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!file) return alert("Please upload an image!");
+    if (!file) return toast.error("Hold on Crashers! Even free food needs a ticket. Upload Card Image");
+
+    const formData = new FormData(e.target);
+
+    // Date check, should be from today to 1 month max
+    const dateString = formData.get("date");
+    const selectedDate = new Date(dateString);
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); 
+
+    const maxDate = new Date();
+    maxDate.setMonth(today.getMonth() + 1);
+
+    if (selectedDate < today) {
+      return toast.error("we can't crash weddings in the past!  Check wedding date");
+    }
+
+    if (selectedDate > maxDate) {
+      return toast.error("Too far away! We'll starve by then. Must be within 1 month");
+    }
 
     setLoading(true);
     try {
-      const formData = new FormData(e.target);
-
       const imageUrl = await uploadToCloudinary(file);
 
       await addDoc(collection(db, "invites"), {
@@ -62,12 +81,13 @@ export default function CreatePage() {
         date: formData.get("date"),
         imageUrl: imageUrl,
         userId: auth.currentUser.uid,
+        userName: auth.currentUser.displayName,
         createdAt: serverTimestamp(),
       });
       navigate("/feed");
     } catch (error) {
       console.error(error);
-      alert("Upload failed.");
+      toast.error("Upload failed.");
     } finally {
       setLoading(false);
     }
@@ -94,7 +114,7 @@ export default function CreatePage() {
             <Input
               name="venue"
               id="venue"
-              placeholder="e.g. Grand Palace, Mumbai"
+              placeholder="e.g. Vrindavan Lawn, Kidwai Nagar"
               required
               className="focus-visible:ring-rose-500"
             />
