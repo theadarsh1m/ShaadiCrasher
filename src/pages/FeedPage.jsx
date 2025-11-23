@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { PlusCircle, Loader2, ArrowUpDown } from "lucide-react";
-import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
+import {
+  collection,
+  query,
+  orderBy,
+  onSnapshot,
+  deleteDoc,
+  doc,
+} from "firebase/firestore";
 import { db } from "../firebase";
 import { Button } from "@/components/ui/button";
 import WeddingCard from "../components/WeddingCard";
@@ -30,11 +37,33 @@ export default function FeedPage() {
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        const invitesData = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setInvites(invitesData);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const validCards = [];
+        // console.log(snapshot.docs[0]._document.data.value.mapValue.fields.date)
+
+        snapshot.docs.forEach(async (documentSnapshot) => {
+          const data = documentSnapshot.data();
+          const weddingDate = new Date(data.date); // console.log(weddingDate)
+
+          if (weddingDate < today) {
+            try {
+              await deleteDoc(doc(db, "invites", documentSnapshot.id));
+              console.log(
+                `Auto deleted wedding cuz shaadi ho chuki h ${data.venue}`
+              );
+            } catch (err) {
+              console.log("auto delete failed", err);
+            }
+          } else {
+            validCards.push({
+              id: documentSnapshot.id,
+              ...data,
+            });
+          }
+        });
+        setInvites(validCards);
         setLoading(false);
       },
       (error) => {
