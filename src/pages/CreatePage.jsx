@@ -1,19 +1,25 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, UploadCloud, Loader2, X } from "lucide-react";
+import { ArrowLeft, UploadCloud, Loader2, X, MapPin } from "lucide-react";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage, auth } from "../firebase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import toast from 'react-hot-toast';
+import toast from "react-hot-toast";
 
 export default function CreatePage() {
   const navigate = useNavigate();
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  const OLA_API_KEY = import.meta.env.VITE_OLA_MAPS_API_KEY;
+  const [query, setQuery] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [venueLocation, setVenueLocation] = useState(null);
 
   const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
   const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
@@ -48,9 +54,64 @@ export default function CreatePage() {
     }
   };
 
+  useEffect(() => {
+    const fetchPlaces = async () => {
+      if (!query || query.length < 3) {
+        setSuggestions([]);
+        return;
+      }
+
+      if (venueLocation && query === venueLocation.name) {
+        return;
+      }
+
+      try {
+        const reqId = crypto.randomUUID();
+
+        const res = await fetch(
+          `https://api.olamaps.io/places/v1/autocomplete?input=${encodeURIComponent(
+            query
+          )}&api_key=${OLA_API_KEY}`,
+          {
+            headers: {
+              "X-Request-Id": reqId,
+            },
+          }
+        );
+
+        const data = await res.json();
+        console.log(data);
+        setSuggestions(data.predictions || []);
+        setShowSuggestions(true);
+      } catch (err) {
+        console.log("err while fetching suggestion form ola maps api", err);
+      }
+    };
+    fetchPlaces();
+  }, [query]);
+
+  const handleSelectPlace = (place) => {
+    const placeName = place.structured_formatting.main_text;
+
+    setQuery(placeName);
+    setSuggestions([]);
+    setShowSuggestions(false);
+
+    setVenueLocation({
+      name: placeName,
+      address: place.description,
+      lat: place.geometry.location.lat,
+      lng: place.geometry.location.lng,
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!file) return toast.error("Hold on Crashers! Even free food needs a ticket. Upload Card Image");
+    if (!file)
+      return toast.error(
+        "Hold on Crashers! Even free food needs a ticket. Upload Card Image"
+      );
+    if (!venueLocation) return toast.error("Venue correct to h na..?");
 
     const formData = new FormData(e.target);
 
@@ -59,17 +120,21 @@ export default function CreatePage() {
     const selectedDate = new Date(dateString);
 
     const today = new Date();
-    today.setHours(0, 0, 0, 0); 
+    today.setHours(0, 0, 0, 0);
 
     const maxDate = new Date();
     maxDate.setMonth(today.getMonth() + 1);
 
     if (selectedDate < today) {
-      return toast.error("we can't crash weddings in the past!  Check wedding date");
+      return toast.error(
+        "we can't crash weddings in the past!  Check wedding date"
+      );
     }
 
     if (selectedDate > maxDate) {
-      return toast.error("Too far away! We'll starve by then. Must be within 1 month");
+      return toast.error(
+        "Too far away! We'll starve by then. Must be within 1 month"
+      );
     }
 
     setLoading(true);
@@ -77,13 +142,19 @@ export default function CreatePage() {
       const imageUrl = await uploadToCloudinary(file);
 
       await addDoc(collection(db, "invites"), {
-        venue: formData.get("venue"),
+        venue: venueLocation.name,
         date: formData.get("date"),
+        address: venueLocation.address,
+        location: {
+          lat: venueLocation.lat,
+          lng: venueLocation.lng,
+        },
         imageUrl: imageUrl,
         userId: auth.currentUser.uid,
         userName: auth.currentUser.displayName,
         createdAt: serverTimestamp(),
       });
+      toast.success("Posted !");
       navigate("/feed");
     } catch (error) {
       console.error(error);
@@ -117,8 +188,33 @@ export default function CreatePage() {
               placeholder="e.g. Vrindavan Lawn, Kidwai Nagar"
               required
               className="focus-visible:ring-rose-500"
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setVenueLocation(null);
+              }}
             />
           </div>
+
+          {showSuggestions && suggestions.length > 0 && (
+            <div className="absolute z-50 w-full bg-white border border-gray-200 rounded-md shadow-xl mt-1 max-h-60 overflow-auto">
+              {suggestions.map((place) => (
+                <div
+                  key={place.place_id}
+                  className="p-3 hover:bg-rose-50 cursor-pointer text-sm border-b border-gray-50 last:border-none transition-colors"
+                  onClick={() => handleSelectPlace(place)}
+                >
+                  <p className="font-medium text-gray-800">
+                    {place.structured_formatting.main_text}
+                    {/* {console.log(place.structured_formatting.main_text)} */}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate">
+                    {place.structured_formatting.secondary_text}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="date">Wedding Date</Label>
