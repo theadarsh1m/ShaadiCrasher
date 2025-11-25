@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { PlusCircle, Loader2, ArrowUpDown } from "lucide-react";
 import {
   collection,
   query,
@@ -10,19 +8,47 @@ import {
   doc,
 } from "firebase/firestore";
 import { db } from "../firebase";
-import { Button } from "@/components/ui/button";
-import WeddingCard from "../components/WeddingCard";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
+import Header from "@/components/feed/Header";
+import ShowWeddingCards from "@/components/feed/ShowWeddingCards";
 
 export default function FeedPage() {
   const [invites, setInvites] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState("newest");
+  const [userLocation, setUserLocation] = useState(null);
+
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLocation({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        });
+      },
+      (err) => {
+        console.log("Location permission denied:", err);
+        setUserLocation(null);
+      }
+    );
+  }, []);
+
+  const getDistance = (lat1, lon1, lat2, lon2) => {
+    if (!lat1 || !lon1 || !lat2 || !lon2) return Infinity;
+
+    const R = 6371; // km
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * (Math.PI / 180)) *
+        Math.cos(lat2 * (Math.PI / 180)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
 
   useEffect(() => {
     let q;
@@ -63,6 +89,25 @@ export default function FeedPage() {
             });
           }
         });
+        if (sortBy === "nearest" && userLocation) {
+          validCards.sort((a, b) => {
+            const distA = getDistance(
+              userLocation.lat,
+              userLocation.lng,
+              a.location?.lat,
+              a.location?.lng
+            );
+
+            const distB = getDistance(
+              userLocation.lat,
+              userLocation.lng,
+              b.location?.lat,
+              b.location?.lng
+            );
+
+            return distA - distB;
+          });
+        }
         setInvites(validCards);
         setLoading(false);
       },
@@ -73,80 +118,16 @@ export default function FeedPage() {
     );
 
     return () => unsubscribe();
-  }, [sortBy]);
+  }, [sortBy, userLocation]);
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-8 min-h-[80vh]">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
-        <div>
-          <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
-            Free Parties...
-          </h2>
-          <p className="text-gray-500 mt-1">
-            Discover nearby Shaadies and Have Food & Fun
-          </p>
-        </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="gap-2">
-              <ArrowUpDown size={16} />
-              Sort by:{" "}
-              {sortBy === "createdAt" ? "Newest Uploads" : "Upcoming Weddings"}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-59">
-            <DropdownMenuItem onClick={() => setSortBy("newest")}>
-              Newest Uploads
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setSortBy("weddingDate")}>
-              Upcoming Weddings
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <Button
-          asChild
-          className="bg-rose-600 hover:bg-rose-700 shadow-lg shadow-rose-100 hover:shadow-rose-200 transition-all rounded-full px-6"
-        >
-          <Link to="/create" className="flex items-center gap-2">
-            <PlusCircle size={18} />
-            Add Invite
-          </Link>
-        </Button>
-      </div>
-
-      {/* Content */}
-      {loading ? (
-        <div className="flex justify-center items-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-rose-600" />
-        </div>
-      ) : invites.length > 0 ? (
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {invites.map((invite) => (
-            <WeddingCard key={invite.id} invite={invite} />
-          ))}
-        </div>
-      ) : (
-        <div className="p-12 text-center bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 col-span-full flex flex-col items-center justify-center min-h-[400px]">
-          <div className="bg-white p-4 rounded-full shadow-sm mb-4">
-            <PlusCircle className="h-8 w-8 text-rose-400" />
-          </div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">
-            No weddings found yet!
-          </h3>
-          <p className="text-gray-500 max-w-sm mx-auto mb-6">
-            Looks like there are no parties happening nearby. Be the first one
-            to start the celebration!
-          </p>
-          <Button
-            asChild
-            variant="outline"
-            className="border-rose-200 text-rose-600 hover:bg-rose-50"
-          >
-            <Link to="/create">Upload an Invite</Link>
-          </Button>
-        </div>
-      )}
+      <Header
+        sortBy={sortBy}
+        setSortBy={setSortBy}
+        userLocation={userLocation}
+      />
+      <ShowWeddingCards loading={loading} invites={invites} />
     </div>
   );
 }

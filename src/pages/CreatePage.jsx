@@ -47,9 +47,9 @@ export default function CreatePage() {
 
     try {
       const res = await axios.post(
-      `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
-      formData
-    );
+        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+        formData
+      );
       return res.data.secure_url;
     } catch (error) {
       console.error("Error uploading to Cloudinary:", error);
@@ -72,26 +72,27 @@ export default function CreatePage() {
         const reqId = crypto.randomUUID();
 
         const res = await axios.get(
-        `https://api.olamaps.io/places/v1/autocomplete`,
-        {
-          params: {
-            input: query,
-            api_key: OLA_API_KEY,
-          },
-          headers: {
-            "X-Request-Id": reqId,
-          },
-        }
-      );
+          `https://api.olamaps.io/places/v1/autocomplete`,
+          {
+            params: {
+              input: query,
+              api_key: OLA_API_KEY,
+            },
+            headers: {
+              "X-Request-Id": reqId,
+            },
+          }
+        );
 
-        console.log(res.data)
+        console.log(res.data);
         setSuggestions(res.data.predictions || []);
         setShowSuggestions(true);
       } catch (err) {
         console.log("err while fetching suggestion form ola maps api", err);
       }
     };
-    fetchPlaces();
+    const timeoutId = setTimeout(() => fetchPlaces(), 500); // type fast -> less api call piliz
+    return () => clearTimeout(timeoutId);
   }, [query]);
 
   const handleSelectPlace = (place) => {
