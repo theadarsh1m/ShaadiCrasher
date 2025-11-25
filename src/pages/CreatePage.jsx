@@ -1,19 +1,34 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, UploadCloud, Loader2, X, MapPin } from "lucide-react";
+import axios from "axios";
+import { ArrowLeft, UploadCloud, Loader2 } from "lucide-react";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { db, storage, auth } from "../firebase";
+import { db, auth } from "../firebase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import toast from "react-hot-toast";
+import UploadImage from "@/components/UploadImage";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function CreatePage() {
   const navigate = useNavigate();
   const [file, setFile] = useState(null);
-  const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [open, setOpen] = useState(false);
+
+  const handleDateChange = (date) => {
+    setSelectedDate(date);
+    setOpen(false);
+  };
 
   const OLA_API_KEY = import.meta.env.VITE_OLA_MAPS_API_KEY;
   const [query, setQuery] = useState("");
@@ -24,14 +39,6 @@ export default function CreatePage() {
   const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
   const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
-  const handleFile = (e) => {
-    const selected = e.target.files[0];
-    if (selected) {
-      setFile(selected);
-      setPreview(URL.createObjectURL(selected));
-    }
-  };
-
   const uploadToCloudinary = async (imageFile) => {
     const formData = new FormData();
     formData.append("file", imageFile);
@@ -39,15 +46,11 @@ export default function CreatePage() {
     formData.append("cloud_name", CLOUD_NAME);
 
     try {
-      const res = await fetch(
-        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
-        { method: "POST", body: formData }
-      );
-
-      if (!res.ok) throw new Error("Cloudinary upload failed");
-
-      const data = await res.json();
-      return data.secure_url;
+      const res = await axios.post(
+      `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+      formData
+    );
+      return res.data.secure_url;
     } catch (error) {
       console.error("Error uploading to Cloudinary:", error);
       throw error;
@@ -68,20 +71,21 @@ export default function CreatePage() {
       try {
         const reqId = crypto.randomUUID();
 
-        const res = await fetch(
-          `https://api.olamaps.io/places/v1/autocomplete?input=${encodeURIComponent(
-            query
-          )}&api_key=${OLA_API_KEY}`,
-          {
-            headers: {
-              "X-Request-Id": reqId,
-            },
-          }
-        );
+        const res = await axios.get(
+        `https://api.olamaps.io/places/v1/autocomplete`,
+        {
+          params: {
+            input: query,
+            api_key: OLA_API_KEY,
+          },
+          headers: {
+            "X-Request-Id": reqId,
+          },
+        }
+      );
 
-        const data = await res.json();
-        console.log(data);
-        setSuggestions(data.predictions || []);
+        console.log(res.data)
+        setSuggestions(res.data.predictions || []);
         setShowSuggestions(true);
       } catch (err) {
         console.log("err while fetching suggestion form ola maps api", err);
@@ -112,12 +116,9 @@ export default function CreatePage() {
         "Hold on Crashers! Even free food needs a ticket. Upload Card Image"
       );
     if (!venueLocation) return toast.error("Venue correct to h na..?");
-
-    const formData = new FormData(e.target);
-
-    // Date check, should be from today to 1 month max
-    const dateString = formData.get("date");
-    const selectedDate = new Date(dateString);
+    if (!selectedDate) {
+      return toast.error("Pick a wedding date!");
+    }
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -143,7 +144,7 @@ export default function CreatePage() {
 
       await addDoc(collection(db, "invites"), {
         venue: venueLocation.name,
-        date: formData.get("date"),
+        date: selectedDate.toISOString(),
         address: venueLocation.address,
         location: {
           lat: venueLocation.lat,
@@ -218,50 +219,37 @@ export default function CreatePage() {
 
           <div className="space-y-2">
             <Label htmlFor="date">Wedding Date</Label>
-            <Input
-              type="date"
-              name="date"
-              id="date"
-              required
-              className="focus-visible:ring-rose-500 block w-full"
-            />
+            <div className="relative">
+              <Popover open={open} onOpenChange={setOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    onClick={() => setOpen(true)}
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !selectedDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {selectedDate
+                      ? selectedDate.toLocaleDateString()
+                      : "Select Date"}
+                  </Button>
+                </PopoverTrigger>
+
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={handleDateChange} // ← main fix
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label>Upload Image</Label>
-            {!preview ? (
-              <label className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-md h-32 cursor-pointer hover:border-rose-400 hover:bg-rose-50 transition">
-                <UploadCloud className="w-8 h-8 text-gray-400 mb-2" />
-                <span className="text-sm text-gray-500">
-                  Click to upload invite
-                </span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFile}
-                  className="hidden"
-                />
-              </label>
-            ) : (
-              <div className="relative h-48 rounded-md overflow-hidden group border">
-                <img
-                  src={preview}
-                  alt="Preview"
-                  className="w-full h-full object-cover"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFile(null);
-                    setPreview(null);
-                  }}
-                  className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
-                >
-                  <X className="text-white w-8 h-8 bg-rose-600 rounded-full p-1" />
-                </button>
-              </div>
-            )}
-          </div>
+          <UploadImage setFile={setFile} />
 
           <Button
             type="submit"
