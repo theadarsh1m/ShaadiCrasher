@@ -1,5 +1,4 @@
 import React from "react";
-import { Heart, Calendar } from "lucide-react";
 import { LiquidButton } from "./ui/LiquidButton";
 import { useAuth } from "@/context/AuthContext";
 
