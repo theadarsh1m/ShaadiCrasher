@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Heart, UserCircle, LogOut } from "lucide-react";
+import { UserCircle, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 
@@ -14,7 +14,11 @@ export default function Navbar({ user }) {
           to="/"
           className="flex items-center gap-2 p-1.5 text-rose-600 no-underline"
         >
-          <Heart className="fill-current" size={24} />
+          <img
+            src="ShaadiCrasherLogo.png"
+            alt="logo"
+            className="size-8 scale-x-135"
+          />
           <h1 className="text-2xl font-bold">Shaadi Crasher</h1>
         </Link>
 
@@ -31,7 +35,9 @@ export default function Navbar({ user }) {
               <UserCircle size={32} className="text-gray-600" />
             )}
             <span className="text-sm font-medium text-gray-700 hidden sm:block">
-              {user.displayName ? user.displayName.split(" ")[0] : "Mai hu kaun"}
+              {user.displayName
+                ? user.displayName.split(" ")[0]
+                : "Mai hu kaun"}
             </span>
             <Button
               variant="ghost"
