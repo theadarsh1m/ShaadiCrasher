@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth";
-import { auth, googleProvider } from "../firebase";
+import { auth, googleProvider, db } from "../firebase";
+import { doc, setDoc, serverTimestamp, addDoc, collection } from "firebase/firestore";
 
 const AuthContext = createContext(); // create context
 
@@ -30,8 +31,25 @@ export function AuthProvider({ children }) {
   };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
+      if (currentUser) {
+        // login timestamp
+        await setDoc(
+          doc(db, "loginLogs", currentUser.uid),
+          {
+            email: currentUser.email,
+            lastLogin: serverTimestamp(),
+          },
+          { merge: true }
+        );
+
+        // website visits
+        await addDoc(collection(db, "visitLogs"), {
+          email: currentUser.email,
+          visitedAt: serverTimestamp(),
+        });
+      }
       setLoading(false);
     });
     return () => unsubscribe();
