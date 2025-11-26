@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
+import "leaflet/dist/leaflet.css";
 
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
@@ -10,6 +11,7 @@ import Footer from "./components/Footer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "./context/AuthContext";
 import CreatePage from "./pages/CreatePage";
+import MapPage from "./pages/MapPage";
 
 export default function App() {
   const { user, loading } = useAuth(); // getting from authContext
@@ -63,6 +65,7 @@ export default function App() {
           element={user ? <FeedPage /> : <Navigate to="/" />}
         />
         <Route path="/create" element={<CreatePage />} />
+        <Route path="/map" element={<MapPage />} />
       </Routes>
       <Footer />
     </Router>

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, MapPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Menu from "./Menu";
 
@@ -22,8 +22,16 @@ export default function Header({ sortBy, setSortBy, userLocation }) {
         className="bg-rose-600 hover:bg-rose-700 shadow-lg shadow-rose-100 hover:shadow-rose-200 transition-all rounded-full px-6"
       >
         <Link to="/create" className="flex items-center gap-2">
-          <PlusCircle size={18} />
+          <PlusCircle />
           Add Invite
+        </Link>
+      </Button>
+      <Button
+        asChild
+        className="bg-blue-600 hover:bg-blue-900 shadow-lg rounded-full p-5"
+      >
+        <Link to="/map" className="flex items-center gap-2">
+          <MapPlus /> View Parties on Map
         </Link>
       </Button>
     </div>
