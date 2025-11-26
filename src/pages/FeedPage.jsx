@@ -10,27 +10,14 @@ import {
 import { db } from "../firebase";
 import Header from "@/components/feed/Header";
 import ShowWeddingCards from "@/components/feed/ShowWeddingCards";
+import useUserLocation from "@/hooks/useUserLocation";
 
 export default function FeedPage() {
   const [invites, setInvites] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState("newest");
-  const [userLocation, setUserLocation] = useState(null);
 
-  useEffect(() => {
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setUserLocation({
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-        });
-      },
-      (err) => {
-        console.log("Location permission denied:", err);
-        setUserLocation(null);
-      }
-    );
-  }, []);
+  const { userLocation } = useUserLocation();
 
   const getDistance = (lat1, lon1, lat2, lon2) => {
     if (!lat1 || !lon1 || !lat2 || !lon2) return Infinity;

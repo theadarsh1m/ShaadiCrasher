@@ -1,19 +1,32 @@
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  Popup,
-} from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import { collection, onSnapshot, query } from "firebase/firestore";
 import { db } from "../firebase";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import L from "leaflet";
+import useUserLocation from "@/hooks/useUserLocation";
 
 export default function MapPage() {
   const navigate = useNavigate();
   const [invites, setInvites] = useState([]);
+
+  const WeddingMarkerIcon = L.icon({
+    // pointer for wedding locations
+    iconUrl: "/MapPoint.png",
+    iconSize: [40, 40],
+    iconAnchor: [20, 40],
+    popupAnchor: [0, -40],
+  });
+
+  const UserLocationIcon = L.icon({
+    iconUrl: "/UserLocationIcon.png",
+    iconSize: [30, 30],
+    iconAnchor: [10, 10],
+  });
+
+  const { userLocation } = useUserLocation();
 
   useEffect(() => {
     const q = query(collection(db, "invites"));
@@ -47,6 +60,14 @@ export default function MapPage() {
         style={{ height: "100%", width: "100%" }}
       >
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        {userLocation && (
+          <Marker
+            position={[userLocation.lat, userLocation.lng]}
+            icon={UserLocationIcon}
+          >
+            <Popup>Hey!! Its You :3</Popup>
+          </Marker>
+        )}
 
         {/* markers */}
         {invites.map((invite) => {
@@ -56,7 +77,11 @@ export default function MapPage() {
           if (!lat || !lng) return null;
 
           return (
-            <Marker key={invite.id} position={[lat, lng]}>
+            <Marker
+              key={invite.id}
+              position={[lat, lng]}
+              icon={WeddingMarkerIcon}
+            >
               <Popup>
                 <div className="font-extrabold text-base">{invite.venue}</div>
                 <div className="text-sm text-gray-600">{invite.address}</div>
