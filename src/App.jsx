@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
+import { Analytics } from "@vercel/analytics/react";
 import "leaflet/dist/leaflet.css";
 
 import Navbar from "./components/Navbar";
@@ -68,6 +69,7 @@ export default function App() {
         <Route path="/map" element={<MapPage />} />
       </Routes>
       <Footer />
+      <Analytics />
     </Router>
   );
 }
